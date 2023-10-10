@@ -8,10 +8,20 @@ const express = require("express");
 const mysql = require("mysql");
 const bodyparser = require("body-parser");
 const cors = require("cors");
-const bcrypt = require("bcrypt"); // Make sure to import the bcrypt library for password hashing
-const app = express();
-//connect to mysql
+const bcrypt = require("bcrypt");
+const passport = require("passport");
+const GoogleStrategy = require("passport-google-oauth20");
+const FacebookStrategy = require("passport-facebook");
+const expressSession = require("express-session");
 
+const app = express();
+
+// const GOOGLE_CLIENT_ID = "";
+// const GOOGLE_CLIENT_SECRECT = "";
+// const Facebook_CLIENT_ID = "";
+// const Facebook_CLIENT_SECRECT = "";
+
+//connect to mysql
 var con = mysql.createConnection({
   host: "localhost",
   user: "root",
@@ -27,13 +37,12 @@ con.connect(function (err) {
 });
 
 const corsOptions = {
-  origin: "http://192.168.10.4:8081",
+  origin: "http://192.168.10.2:8081",
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true, // enable set cookie
 };
 
 app.use(cors(corsOptions));
-
 app.use(bodyparser.json()); //Accept json params
 app.use(bodyparser.urlencoded({ extended: true })); //Accept URL Encoded params
 
@@ -102,7 +111,7 @@ app.post("/Signup/", async (req, res, next) => {
   }
 });
 
-app.post("/login", (req, res) => {
+app.post("/LoginScreen", (req, res) => {
   const { username, password } = req.body;
 
   // Check if both username and password are provided
@@ -119,7 +128,9 @@ app.post("/login", (req, res) => {
     async (err, results) => {
       if (err) {
         console.error("MySQL ERROR:", err);
-        return res.status(500).json({ error: "Database error" });
+        return res
+          .status(500)
+          .json({ error: "Login failed. Please try again" });
       }
 
       if (results.length === 0) {
@@ -141,9 +152,9 @@ app.post("/login", (req, res) => {
           // Passwords match, return user data (excluding the password)
           const userData = { ...user };
           delete userData.password;
-          res.status(200).json(userData);
+          res.status(200).json({ success: true, data: userData });
         } else {
-          res.status(401).json({ error: "Wrong password" });
+          res.status(401).json({ success: false, error: "Wrong password" });
         }
       } catch (compareErr) {
         console.error("Password Comparison Error:", compareErr);
@@ -152,6 +163,73 @@ app.post("/login", (req, res) => {
     }
   );
 });
+
+// passport.use(
+//   new GoogleStrategy(
+//     {
+//       clientID: GOOGLE_CLIENT_ID,
+//       clientSecret: GOOGLE_CLIENT_SECRECT,
+//       callbackURL: "/google",
+//     },
+//     (accessToken, refreshToken, profile, callback) => {
+//       callback(null, profile);
+//     }
+//   )
+// );
+
+// passport.use(
+//   new FacebookStrategy(
+//     {
+//       clientID: Facebook_CLIENT_ID,
+//       clientSecret: Facebook_CLIENT_SECRECT,
+//       callbackURL: "facebook",
+//       profileFields: ["emails", "displayName", "name"],
+//     },
+//     (accessToken, refreshToken, profile, callback) => {
+//       callback(null, profile);
+//     }
+//   )
+// );
+
+// passport.serializeUser((user, callback) => {
+//   callback(null, user);
+// });
+
+// passport.deserializeUser((user, callback) => {
+//   callback(null, user);
+// });
+
+// app.use(
+//   expressSession({
+//     secret: "Nextdoor",
+//     resave: true,
+//     saveUninitialized: true,
+//   })
+// );
+
+// //routes
+// app.get(
+//   "/login/google",
+//   passport.authenticate("google", { scope: ["profile email"] })
+// );
+
+// app.get(
+//   "/login/facebook",
+//   passport.authenticate("facebook", { scope: ["email"] })
+// );
+
+// app.get("/google", passport.authenticate("google"), (res, req) => {
+//   res.redirect("/");
+// });
+// app.get("/facebook", passport.authenticate("facebook"), (res, req) => {
+//   res.redirect("/");
+// });
+
+// app.get("/", (req, res) => {
+//   res.send(
+//     req.user ? req.user : "Not logged in, login with Google or facebook"
+//   );
+// });
 
 // app.get("/", (req, res, next) => {
 //   console.log("Password: 123456");

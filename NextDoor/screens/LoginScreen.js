@@ -1,6 +1,14 @@
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Linking } from "react-native";
+import * as WebBrowser from "expo-web-browser";
 import { useNavigation } from "@react-navigation/native";
+import * as Google from "expo-auth-session/providers/google";
+import * as Facebook from "expo-auth-session/providers/facebook";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AccessToken, LoginManager } from "react-native-fbsdk";
+import UserContainer from "../UserContainer";
+import SizeMediumStyleLight from "../SizeMeduiumStyleLight";
 import {
   Text,
   StyleSheet,
@@ -11,39 +19,67 @@ import {
   Keyboard,
   KeyboardAvoidingView,
 } from "react-native";
-import { Image } from "expo-image";
 import { Color, FontSize, FontFamily, Padding, Border } from "../GlobalStyles";
+WebBrowser.maybeCompleteAuthSession();
 
 const LoginScreen = () => {
   const navigation = useNavigation();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [isInputFocused, setInputFocused] = useState(false);
+  const [hidePassword, setHidePassword] = useState(true);
+  const [user, setUser] = useState("null");
+  const [request, response, propmtAsync] = Facebook.useAuthRequest({
+    clientId: 712332427578768,
+  });
+  useEffect(() => {
+    if (response && response.type === "success" && response.authentication) {
+      (async () => {
+        const userInfoResponse = await fetch(
+          `https://graph.facebook.com/me?access_token=${response.authentication.accessToken}&fields=id, name, picture.type(large)`
+        );
+        const userInfo = await userInfoResponse.json();
+        setUser(userInfo);
+      })();
+    }
+  }, [response]);
 
-  const handleLogin = async () => {
-    const username = useState();
-    const password = useState();
-    try {
-      const response = await fetch("", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
-      });
-      const results = await response.json();
-      if (results.success) {
-        console.log("Login Successful");
-      } else {
-        console.log("Login failed: ", results.message);
-      }
-    } catch (error) {
-      console.error("Error duing login: ", error);
+  const handlePressAsync = async () => {
+    const result = await propmtAsync();
+    if (result.type !== "success") {
+      alert("something went wrong");
+      return;
     }
   };
 
+  // const handleLogin = async () => {
+  //   try {
+  //     const response = await fetch("http://192.168.10.2:3000/LoginScreen", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({ username, password }),
+  //     });
+  //     console.log("Response Status", response.status);
+  //     if (response.ok) {
+  //       console.log("Login Successful");
+  //       navigation.navigate("Home");
+  //     } else {
+  //       console.error(
+  //         "Login failed. Server returned an error: ",
+  //         response.status
+  //       );
+  //     }
+  //   } catch (error) {
+  //     console.error("Error duing login: ", error);
+  //   }
+  // };
+
   const handleCreateAccount = () => {
     navigation.navigate("Signup");
+    navigation.navigate("Home");
   };
-
-  const [isInputFocused, setInputFocused] = React.useState(false);
   React.useEffect(() => {
     const keyboardDidHideListener = Keyboard.addListener(
       "keyboardDidHide",
@@ -56,12 +92,11 @@ const LoginScreen = () => {
       keyboardDidHideListener.remove();
     };
   }, []);
-  const [hidePassword, setHidePassword] = React.useState(true);
   return (
     <ImageBackground
       style={styles.loginScreenIcon}
       resizeMode="cover"
-      source={require("C:/Users/Hp/OneDrive/Documents/Project/NextDoor/assets/loginScreen.jpg")} // Update the path to your image
+      source={require("C:/Users/Hp/OneDrive/Documents/Project-repo/Project/NextDoor/assets/loginScreen.jpg")} // Update the path to your image
     >
       <View style={styles.content}>
         <View style={styles.content1}>
@@ -83,6 +118,7 @@ const LoginScreen = () => {
             placeholderTextColor={Color.colorBlack}
             onFocus={() => setInputFocused(true)}
             onBlur={() => setInputFocused(false)}
+            onChangeText={(text) => setUsername(text)}
           />
           <TextInput
             style={styles.inputField}
@@ -91,6 +127,7 @@ const LoginScreen = () => {
             secureTextEntry={hidePassword}
             onFocus={() => setInputFocused(true)}
             onBlur={() => setInputFocused(false)}
+            onChangeText={(text) => setPassword(text)}
           />
           <TouchableOpacity
             style={styles.showPasswordButton}
@@ -113,10 +150,16 @@ const LoginScreen = () => {
           </TouchableOpacity>
         </View>
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.buttonFlexBox} onPress={handleLogin}>
+          <TouchableOpacity
+            style={styles.buttonFlexBox}
+            onPress={handleCreateAccount}
+          >
             <Text style={styles.label6}>Login</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.buttonFlexBox}>
+          <TouchableOpacity
+            style={styles.buttonFlexBox}
+            onPress={handlePressAsync}
+          >
             <Text style={styles.label6}>Login with Facebook</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.buttonFlexBox}>

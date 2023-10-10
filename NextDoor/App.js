@@ -1,15 +1,20 @@
-import * as React from "react";
-import { NavigationContainer } from "@react-navigation/native";
-import { useFonts } from "expo-font";
-import LoginScreen from "./screens/LoginScreen";
-import { useNavigation } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { View, Text, Pressable, TouchableOpacity } from "react-native";
-import Signup from "./screens/Signup";
-import axios from "axios";
 const Stack = createNativeStackNavigator();
 
-//Initiallizing the google signin
+import * as React from "react";
+import { useFonts } from "expo-font";
+import LoginScreen from "./screens/LoginScreen";
+import Signup from "./screens/Signup";
+import Home from "./screens/Home";
+import Discover from "./screens/Discover";
+import { name as appName } from "./app.json";
+import { AppRegistry } from "react-native";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+
+AsyncStorage;
+AppRegistry.registerComponent(appName, () => App);
 
 const App = () => {
   const [hideSplashScreen, setHideSplashScreen] = React.useState(true);
@@ -36,6 +41,16 @@ const App = () => {
             <Stack.Screen
               name="Signup"
               component={Signup}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Home"
+              component={Home}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Discover"
+              component={Discover}
               options={{ headerShown: false }}
             />
           </Stack.Navigator>
